@@ -27,6 +27,12 @@ Eigen::VectorXd stdToEigenVector(const vector<double> vals) {
   return result;
 }
 
+double normalizeToPi(double psi) {
+  while (psi >= pi()) psi -= 2 * pi();
+  while (psi <= -pi()) psi += 2 * pi();
+  return psi;
+}
+
 int main() {
   uWS::Hub h;
 
@@ -53,6 +59,14 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double steer_value = (nullptr == j[1]["steering_value"] ? 0.0 : (double)j[1]["steering_value"]);
+          double throttle_value = (nullptr == j[1]["throttle"] ? 0.0 : (double)j[1]["throttle"]);
+          double latency = 0.1;
+          px += v * cos(psi) * latency;
+          py += v * sin(psi) * latency;
+          psi -= v * steer_value * deg2rad(25) * latency / Lf;
+          psi = normalizeToPi(psi);
+          v += throttle_value * latency;
           for (size_t i = 0; i < ptsx.size(); i++) {
             double shift_x = ptsx[i] - px;
             double shift_y = ptsy[i] - py;
@@ -68,17 +82,15 @@ int main() {
 
           auto vars = mpc.Solve(state, coeffs);
           /**
-           * TODO: Calculate steering angle and throttle using MPC.
-           * Both are in between [-1, 1].
+           * Calculate steering angle and throttle using MPC. Both are in between [-1, 1].
+           * Divide by deg2rad(25) before sending the steering value back.
+           * Otherwise the values will be in between [-deg2rad(25), deg2rad(25)] instead of [-1, 1].
            */
-          double steer_value = vars[0];
-          double throttle_value = vars[1];
+          steer_value = vars[0] / deg2rad(25) / Lf;
+          throttle_value = vars[1];
 
           json msgJson;
-          // NOTE: Remember to divide by deg2rad(25) before you send the
-          //   steering value back. Otherwise the values will be in between
-          //   [-deg2rad(25), deg2rad(25)] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value / deg2rad(25) / Lf;
+          msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
 
           // Display the MPC predicted trajectory
