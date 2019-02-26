@@ -18,6 +18,24 @@ $$ v_{t+1} = v_{t} + a_{t} * dt $$
 
 # Model-parameter Tuning
 
+Tried several combination of N and dt. Each has its pros and cons. Eventually I settled down with N=10 and dt=0.1.
+
+## Large N (25) and small dt (0.05)
+
+This enables the vehicle to look further with more granularity in planning future steps. In theory, the curve planned would be smoother and closer to the reference track. However, the computation power required by this leads to sub-optimal results and gradually increased error to a degree the vehicle swings too much and runs off track. Also, intuitively, looking further means the cost would be higher, which leads the solver to use larger values in acuators to keep the costs down.
+
+## Small N (8) and large dt (0.16)
+
+This looks even further into the future (1.28s instead 1.25s) but is less computationally intensive. One curious phenomenon is the vehicle sticks to the inner curve. This is likely due to the large cost multiplier I used to prevent delta and acceleration from changing too much. It was able to complete the track even sometimes running really close to the edge.
+
+## Small N (6) and small dt (0.075)
+
+This combination is especially short sighted. It delays turning until very close to entering the turn. It works okay in terms of driving in the simulator but likely won't do very well with a lot of curves (in the mountains). Besides, the experience is not as smooth as the settings above.
+
+## Medium N (10) and medium dt (0.1)
+
+This is the final selected combination. It has enough foresight to plan actions, which provides smooth experience. But it does not incur significant amount of computations (the first setting) or large cost per step (the second setting), which prevents it from getting an optimal or sensible result.
+
 # Waypoints
 
 The waypoints are passed back from simulator in global coordinates. Before fitting them to a polynomial, I translated them into local coordinate system with the vehicle's position as the origin. The vehicle's velocity becomes the positive x-axis. Every waypoint is considered rotated counter-clockwise to the global x-axis with the angle between local and global x-axis.
