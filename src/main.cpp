@@ -86,7 +86,7 @@ int main() {
            * Divide by deg2rad(25) before sending the steering value back.
            * Otherwise the values will be in between [-deg2rad(25), deg2rad(25)] instead of [-1, 1].
            */
-          steer_value = vars[0] / deg2rad(25) / Lf;
+          steer_value = vars[0] / deg2rad(25);
           throttle_value = vars[1];
 
           json msgJson;
