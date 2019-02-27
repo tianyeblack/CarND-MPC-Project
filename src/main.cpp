@@ -62,6 +62,11 @@ int main() {
           double steer_value = (nullptr == j[1]["steering_value"] ? 0.0 : (double)j[1]["steering_value"]);
           double throttle_value = (nullptr == j[1]["throttle"] ? 0.0 : (double)j[1]["throttle"]);
           double latency = 0.1;
+          /**
+           * Handling latency
+           * Since the action will be applied 100ms after we do the calculation, we need to consider where the vehicle is 100ms later
+           * Only px, py, psi and v are updated as cte and epsi depends on the fit polynomial
+           */
           px += v * cos(psi) * latency;
           py += v * sin(psi) * latency;
           psi -= v * steer_value * deg2rad(25) * latency / Lf;
@@ -74,8 +79,8 @@ int main() {
             ptsy[i] = -shift_x * sin(psi) + shift_y * cos(psi);
           }
           auto coeffs = polyfit(stdToEigenVector(ptsx), stdToEigenVector(ptsy), 3);
-          double cte = polyeval(coeffs, 0);
-          double epsi = psi - atan(coeffs[1]);
+          double cte = coeffs[0];
+          double epsi = -atan(coeffs[1]);
 
           VectorXd state(6);
           state << 0, 0, 0, v, cte, epsi;
@@ -98,9 +103,8 @@ int main() {
           vector<double> mpc_y_vals;
 
           /**
-           * Add (x,y) points to the predicted trajectory list, points are in reference to
-           *   the vehicle's coordinate system the points in the simulator are
-           *   connected by a Green line
+           * Add (x,y) points to the predicted trajectory list, points are in reference to the vehicle's coordinate system the points in the simulator are
+           * connected by a Green line
            */
           for (size_t t = 1; t < N; t++) {
             mpc_x_vals.push_back(vars[t * 2]);
@@ -114,15 +118,14 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
+          /**
+           * Add (x,y) points to list, points are in reference to the vehicle's coordinate system the points in the simulator are
+           * connected by a Yellow line
+           */
           for (size_t i = 1; i < 25; i++) {
             next_x_vals.push_back(2.5 * i);
             next_y_vals.push_back(polyeval(coeffs, 2.5 * i));
           }
-          /**
-           * TODO: add (x,y) points to list here, points are in reference to
-           *   the vehicle's coordinate system the points in the simulator are
-           *   connected by a Yellow line
-           */
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;

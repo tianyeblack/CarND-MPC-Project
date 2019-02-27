@@ -42,14 +42,14 @@ The waypoints are passed back from simulator in global coordinates. Before fitti
 
 # Latency
 
-Latency is taken into consideration by updating the state with the same equations as the model updates and observed vehicle velocity and accelerations.
+This is handled before converting waypoints to local coordinate system. (See comment in main.cpp about handling latency) It's accomplished via updating the state the same way as the model does with observed vehicle velocity and accelerations.
 
 Accounting for latency in x, y coordinates gets the vehicle through the first two turns and even the third with wild swing. Additionally, when speed is also accounted for, the vehicle is already capable of making through the whole track safely majority of the time (2 out of 3 laps).
 
-After adding corrections for vehicle's directions and making the cost of changing accelerations larger, the vehicle stably makes through the whole track at 36mph.
+After adding corrections for vehicle's directions and making the cost of changing accelerations larger, the vehicle stably makes through the whole track at 40mph.
 
 # Constraints Tuning
 
 Multiply the lower and upper bound by Lf or not and then divide steering angle by Lf makes the turning more smooth and prevents wild swings at low speed. This works because it's sufficient to get the cost of changing direction (delta) large so it's not changed that much. Later, I removed the Lf from constraint but multiple the cost with 200 and was able to get the vehicle to move faster.
 
-This likely applies to other costs as well. To encourage certain behaviors, making it less costly will allow the solver to optimize for that.
+I also multiply the variation of acceleration by a large number to avoid swinging too much at the beginning when speed is low. This also prevents the vehicle from suddenly braking.

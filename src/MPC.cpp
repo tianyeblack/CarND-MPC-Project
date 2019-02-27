@@ -20,18 +20,12 @@ class FG_eval {
     /**
      * `fg` is a vector of the cost constraints, `vars` is a vector of variable
      *   values (state & actuators)
-     * NOTE: You'll probably go back and forth between this function and
-     *   the Solver function below.
      */
     // The cost is stored is the first element of `fg`.
     // Any additions to the cost should be added to `fg[0]`.
     fg[0] = 0;
 
     // Reference State Cost
-    /**
-     * TODO: Define the cost related the reference state and
-     *   anything you think may be beneficial.
-     */
     for (size_t t = 0; t < N; t++) {
       fg[0] += CppAD::pow(vars[cte_start + t], 2);
       fg[0] += CppAD::pow(vars[epsi_start + t], 2);
@@ -39,13 +33,13 @@ class FG_eval {
     }
 
     for (size_t t = 0; t < N - 1; t++) {
-      fg[0] += CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 5 * CppAD::pow(vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t], 2);
     }
 
     for (size_t t = 0; t < N - 2; t++) {
       fg[0] += 200 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      fg[0] += 10 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+      fg[0] += 5000 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
     //
@@ -155,11 +149,11 @@ std::vector<double> MPC::Solve(const VectorXd &state, const VectorXd &coeffs) {
     vars_upperbound[i] = 1.0e19;
   }
 
-  // The upper and lower limits of delta are set to -25 and 25 degrees (values
-  // in radians).
+  // The upper and lower limits of delta are set to -10 and 10 degrees (values in radians).
+  // Turning 25 degrees is not needed to complete the track, at most it needs around 10
   for (size_t i = delta_start; i < a_start; ++i) {
-    vars_lowerbound[i] = -0.436332;
-    vars_upperbound[i] = 0.436332;
+    vars_lowerbound[i] = -0.174533;
+    vars_upperbound[i] = 0.174533;
   }
 
   // Acceleration/decceleration upper and lower limits.
